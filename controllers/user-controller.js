@@ -1,6 +1,6 @@
 const db = require('../models')
 const bcrypt = require('bcryptjs')
-const { User, Favorite, Restaurant, Like } = db
+const { User, Favorite, Restaurant, Like, Followship } = db
 
 const userController = {
   signUpPage: (req, res) => {
@@ -39,7 +39,7 @@ const userController = {
   addFavorite: (req, res, next) => {
     const { restaurantId } = req.params
     const userId = req.user.id
-    Promise.all([
+    return Promise.all([
       Restaurant.findByPk(restaurantId),
       Favorite.findOne({
         where: {
@@ -143,6 +143,59 @@ const userController = {
         if (!restaurant) throw new Error("This restaurant didn't exist.")
         if (!like) throw new Error("This restaurant isn't in your favorite list.")
         return like.destroy()
+      })
+      .then(() => res.redirect('back'))
+      .catch(err => next(err))
+  },
+  getTopUsers: (req, res, next) => {
+    User.findAll({
+      include: [{ model: User, as: 'Followers' }]
+    })
+      .then(users => {
+        // 建立新變數 result 作為整理過後的資料，保留 users 作為原始資料變數
+        const result = users.map(user => ({
+          ...user.toJSON(),
+          followerCount: user.Followers.length,
+          isFollowed: req.user.Followings.some(f => f.id === user.id)
+        }))
+        users = users.sort((a, b) => b.followerCount - a.followerCount)
+        console.log(result)
+        res.render('top-users', { users: result })
+      })
+      .catch(err => next(err))
+  },
+  addFollowing: (req, res, next) => {
+    const { userId } = req.params
+    Promise.all([
+      User.findByPk(userId),
+      Followship.findOne({
+        where: {
+          followerId: req.user.id,
+          followingId: req.params.userId // 應該可以寫成userId
+        }
+      })
+    ])
+      .then(([user, followship]) => {
+        if (!user) throw new Error("User didn't exist!")
+        if (followship) throw new Error('You are already following this user!')
+        return Followship.create({
+          followerId: req.user.id,
+          followingId: userId
+        })
+          .then(() => res.redirect('back'))
+          .catch(err => next(err))
+      })
+  },
+  removeFollowing: (req, res, next) => {
+    Followship.findOne({
+      where: {
+        followerId: req.user.id,
+        followingId: req.params.userId // 應該可以寫成userId
+      }
+    })
+      .then(followship => {
+        if (!followship) throw new Error("You haven't followed this user!")
+        return followship.destroy()
       })
       .then(() => res.redirect('back'))
       .catch(err => next(err))

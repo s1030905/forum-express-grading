@@ -27,6 +27,12 @@ router.post('/signin', passport.authenticate('local', {
 // logout
 router.get('/logout', userController.logout)
 
+// TopUser
+router.get('/users/top', authenticated, userController.getTopUsers)
+
+// topRestaurants
+router.get('/restaurants/top', authenticated, restController.getTopRestaurants)
+
 // profile
 router.get('/users/:id/edit', userController.editUser)
 router.get('/users/:id', userController.getUser)
@@ -53,6 +59,10 @@ router.post('/like/:restaurantId', authenticated, userController.addLike)
 // favorite
 router.post('/favorite/:restaurantId', authenticated, userController.addFavorite)
 router.delete('/favorite/:restaurantId', authenticated, userController.removeFavorite)
+
+// followShip
+router.post('/following/:userId', authenticated, userController.addFollowing)
+router.delete('/following/:userId', authenticated, userController.removeFollowing)
 
 router.get('/', (req, res) => res.redirect('/restaurants'))
 router.use('/', generalErrorHandler)
