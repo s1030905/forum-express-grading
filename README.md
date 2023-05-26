@@ -1,3 +1,14 @@
+# README_2023_05_26
+This is a restaurant review website. You can leave comments and give likes to your favorite restaurants.
+Come and share your opinion!
+
+PLEASE FOLLOW THEESE STEPS
+1. git clone https://github.com/s1030905/forum-express-grading.git
+2. npm i
+3. npm run test
+4. npm run strat
+
+
 # README
 
 1. Fork
